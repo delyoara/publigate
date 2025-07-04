@@ -1,0 +1,8 @@
+asgiref==3.9.0
+Django==5.2.4
+sqlparse==0.5.3
+psycopg2-binary>=2.9  # Para conectarte con PostgreSQL (Neon)
+python-dotenv>=1.0  # Para leer el .env
+httpie==3.2.4
+djangorestframework
+django-cors-headers>=3.13.0

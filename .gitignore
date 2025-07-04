@@ -1,0 +1,71 @@
+# 🌐 FICHIERS SYSTÈME ET GÉNÉRAUX
+.DS_Store
+*.log
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.swp
+*.bak
+*.tmp
+
+# ⚙️ OUTILS DE DÉVELOPPEMENT & CONFIG
+.vscode/
+.idea/
+*.code-workspace
+
+# 🐍 BACKEND (Django / Python)
+backend/env/
+backend/.env
+backend/.env.*
+backend/*.sqlite3
+backend/db.sqlite3
+backend/__pycache__/
+backend/staticfiles/
+backend/media/
+backend/*.log
+backend/.pytest_cache/
+backend/coverage/
+
+# Pip / Poetry / Pipenv
+Pipfile.lock
+poetry.lock
+
+# 📦 FRONTEND (Next.js / React / Node.js)
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+frontend/.env
+frontend/.env.*
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+frontend/out/
+frontend/dist/
+frontend/.cache/
+
+# 🧪 TESTS & COVERAGE
+.coverage
+coverage.*
+htmlcov/
+reports/
+test-output/
+jest.config.js
+frontend/coverage/
+
+# 🐳 DOCKER (si utilisé un jour)
+*.pid
+*.pid.lock
+.dockerignore
+docker-compose.override.yml
+.env.docker
+
+# 🔍 LINTER / FORMATTER (optionnel)
+.mypy_cache/
+.prettierignore
+.eslintcache
+
+notes.md
