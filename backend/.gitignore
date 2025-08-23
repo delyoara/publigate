@@ -1,0 +1,54 @@
+# Environnement virtuel
+env/
+venv/
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*.so
+
+# Fichiers de logs
+*.log
+
+# Fichiers de base de données temporaires
+*.sqlite3
+
+# Migrations (optionnel si tu veux les recréer à chaque fois)
+**/migrations/
+!**/migrations/__init__.py
+
+# Fichiers de cache
+*.cache
+*.pyo
+
+# Fichiers de configuration secrets
+.env
+*.env
+
+# Dossiers de static et media générés
+/staticfiles/
+/media/
+
+# VSCode et autres IDE
+.vscode/
+.idea/
+
+# Fichiers de test ou de couverture
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Docker
+*.pid
+*.db
+*.tar
+*.gz
+
+notes.md
+tables.sql
+.DS_Store
+pip-wheel-metadata/

@@ -1,8 +1,30 @@
 asgiref==3.9.0
+certifi==2025.8.3
+charset-normalizer==3.4.3
+cloudinary==1.44.1
+defusedxml==0.7.1
 Django==5.2.4
-sqlparse==0.5.3
-psycopg2-binary>=2.9  # Para conectarte con PostgreSQL (Neon)
-python-dotenv>=1.0  # Para leer el .env
+django-cors-headers==4.7.0
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
 httpie==3.2.4
-djangorestframework
-django-cors-headers>=3.13.0
+idna==3.10
+markdown-it-py==4.0.0
+mdurl==0.1.2
+multidict==6.6.4
+psycopg==3.2.9
+psycopg-binary==3.2.9
+psycopg-pool==3.2.6
+psycopg2-binary==2.9.10
+Pygments==2.19.2
+PyJWT==2.10.1
+PySocks==1.7.1
+python-dotenv==1.1.1
+requests==2.32.5
+requests-toolbelt==1.0.0
+rich==14.1.0
+setuptools==80.9.0
+six==1.17.0
+sqlparse==0.5.3
+typing_extensions==4.14.1
+urllib3==2.5.0
