@@ -26,6 +26,10 @@ backend/media/
 backend/*.log
 backend/.pytest_cache/
 backend/coverage/
+.pytest_cache/
+
+env/
+
 
 # Pip / Poetry / Pipenv
 Pipfile.lock
@@ -46,6 +50,9 @@ frontend/pnpm-lock.yaml
 frontend/out/
 frontend/dist/
 frontend/.cache/
+frontend/node_modules/
+dist/
+build/
 
 # 🧪 TESTS & COVERAGE
 .coverage
@@ -69,3 +76,4 @@ docker-compose.override.yml
 .eslintcache
 
 notes.md
+tables.sql
