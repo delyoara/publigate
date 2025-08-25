@@ -1,104 +1,150 @@
 "use client";
 
-const ROLES_PAR_DEFAUT = [
-  "auteur",
-  "rédacteur en chef",
-  "relecteur",
-  "editeur",
-  "admin_revue",
+const DEFAULT_ROLES = [
+  "author",
+  "editor_in_chief",
+  "reviewer",
+  "editor",
+  "journal_admin",
 ] as const;
-type RoleStandard = (typeof ROLES_PAR_DEFAUT)[number];
-type Role = RoleStandard | string;
+
+type DefaultRole = (typeof DEFAULT_ROLES)[number];
+type Role = DefaultRole | string;
+
 type LinkItem = { name: string; url: string };
 
-type SelectedRevue = {
+type SelectedJournal = {
   id: string;
-  nom: string;
+  name: string;
   roles: Role[];
-  link?: LinkItem[];
+  links?: LinkItem[];
 };
 
 type SidebarProps = {
-  revue: SelectedRevue | null;
+  journal: SelectedJournal | null;
   mode?: "public" | "private";
 };
 
-export default function Sidebar({ revue, mode = "private" }: SidebarProps) {
-  if (!revue) {
-    return (
-      <nav className="p-4 bg-white shadow text-center">
-        Sélectionnez une revue
-      </nav>
-    );
-  }
-
+export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
   return (
-    <nav className="bg-gradient-to-t from-[#450920] via-[#540b0e] to-[#8f2d56] h-screen w-48 text-white p-4 flex flex-col gap-4">
-      {/* LOGO PUBLIGATE */}
-      <a href="/" className="block">
-        <img
-          src="/logo.png"
-          alt="Logo Publigate"
-          className="w-56 h-38 object-contain mb-2"
-        />
-      </a>
+    <nav className="bg-gradient-to-t from-[#450920] via-[#540b0e] to-[#8f2d56] h-screen w-48 text-white p-4 flex flex-col justify-between">
+      {/* Publigate logo */}
+      <div>
+        <a href="/" className="block mb-6">
+          <img
+            src="/logo.png"
+            alt="Logo Publigate"
+            className="w-48 h-auto object-contain"
+          />
+        </a>
 
-      {/* NOM DE LA REVUE */}
-      <div className="text-xl font-bold text-center py-8">{revue.nom}</div>
+        {/* Platform view (no journal selected) */}
+        {!journal ? (
+          <div className="text-sm text-center opacity-80">
+            <p className="mb-2">Bienvenue sur Publigate</p>
+            <p>Sélectionnez un journal pour accéder aux fonctionnalités</p>
+          </div>
+        ) : (
+          <>
+            {/* Journal name */}
+            <div className="text-xl font-bold text-center py-6">{journal.name}</div>
 
-      {/* LIENS PUBLICS OU PRIVÉS */}
-      {mode === "public" && revue.link?.length ? (
-        <ul className="space-y-2">
-          {revue.link.map((item) => (
-            <li key={item.url}>
-              <a
-                href={item.url}
-                className="inline-block font-bold hover:scale-105 transition-transform duration-200 ease-in-out"
-              >
-                🔗 {item.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <>
-          {revue.roles.includes("auteur") && (
-            <a
-              className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
-              href={`/revues/${revue.id}/link`}
-            >
-              ✍️ Espace auteur
+            {/* Public links */}
+            {mode === "public" && journal.links?.length ? (
+              <ul className="space-y-2">
+                {journal.links.map((item) => (
+                  <li key={item.url}>
+                    <a
+                      href={item.url}
+                      className="inline-block font-bold hover:scale-105 transition-transform duration-200 ease-in-out"
+                    >
+                      🔗 {item.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              // Private links based on roles
+              <ul className="space-y-2">
+                {journal.roles.map((role) => {
+                  switch (role) {
+                    case "author":
+                      return (
+                        <li key={role}>
+                          <a
+                            href={`/journals/${journal.id}/link`}
+                            className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
+                          >
+                            ✍️ Espace auteur
+                          </a>
+                        </li>
+                      );
+                    case "reviewer":
+                      return (
+                        <li key={role}>
+                          <a
+                            href={`/journals/${journal.id}/reviewer`}
+                            className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
+                          >
+                            📄 Relecteur
+                          </a>
+                        </li>
+                      );
+                    case "editor":
+                      return (
+                        <li key={role}>
+                          <a
+                            href={`/journals/${journal.id}/editor`}
+                            className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
+                          >
+                            📚 Comité éditorial
+                          </a>
+                        </li>
+                      );
+                    case "journal_admin":
+                      return (
+                        <li key={role}>
+                          <a
+                            href={`/journals/${journal.id}/admin`}
+                            className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
+                          >
+                            ⚙️ Administration
+                          </a>
+                        </li>
+                      );
+                    default:
+                      return (
+                        <li key={role}>
+                          <a
+                            href={`/journals/${journal.id}/${role}`}
+                            className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
+                          >
+                            🔧 {role}
+                          </a>
+                        </li>
+                      );
+                  }
+                })}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="text-xs text-center text-white opacity-60 px-2 pt-8 space-y-2">
+        {!journal && (
+          <>
+            <a href="/support" className="hover:underline block">
+              ⚠️ Signaler un problème
             </a>
-          )}
-          {revue.roles.includes("relecteur") && (
-            <a
-              className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
-              href={`/revues/${revue.id}/relecteur`}
-            >
-              📄 Relecteur
+            <a href="/admin" className="hover:underline block">
+              🔐 Admin Publigate
             </a>
-          )}
-          {revue.roles.includes("editeur") && (
-            <a
-              className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
-              href={`/revues/${revue.id}/editeur`}
-            >
-              📚 Comité éditorial
-            </a>
-          )}
-          {revue.roles.includes("admin_revue") && (
-            <a
-              className="inline-block hover:scale-105 transition-transform duration-200 ease-in-out"
-              href={`/revues/${revue.id}/admin`}
-            >
-              ⚙️ Administration
-            </a>
-          )}
-        </>
-      )}
-      <div className="mt-auto text-xs text-center text-white opacity-60 px-2 pt-8">
-        © {new Date().getFullYear()} {`Publigate`}.<br />
-        Tous droits réservés.
+          </>
+        )}
+        <p>© {new Date().getFullYear()} Publigate</p>
+        <p>Tous droits réservés.</p>
       </div>
     </nav>
   );

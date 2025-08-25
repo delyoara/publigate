@@ -1,123 +1,146 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/Navbar";
+import Sidebar from "@/app/components/Sidebar";
+import { JournalLinks } from "@/app/components/JournalLinks";
 
-const REVUES = [
-  {
-    id: "revue-SSS",
-    nom: "Sciences Sociales et Santé",
-    image: "/SSS.webp",
-  },
-  {
-    id: "revue-socio",
-    nom: "Revue de Sociologie",
-    image: "/socio.webp",
-  }
-];
+type LinkItem = { name: string; url: string };
+
+type Journal = {
+  id: string;
+  name: string;
+  description?: string;
+  website_url?: string;
+  image?: string;
+  logo?: string;
+  links?: LinkItem[];
+};
 
 export default function LoginPage() {
-  const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const revue = useMemo(() => REVUES.find(r => r.id === id), [id]);
+  const { id } = useParams();
+  const router = useRouter();
+  const [journal, setJournal] = useState<Journal | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [modeInscription, setModeInscription] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  useEffect(() => {
+    const stored = sessionStorage.getItem("selectedJournal");
+    if (stored) {
+      const parsed: Journal = JSON.parse(stored);
+      if (parsed.id === id) {
+        setJournal(parsed);
+      } else {
+        setError("Le journal sélectionné ne correspond pas à l'URL.");
+      }
+    } else {
+      setError("Aucune donnée de journal trouvée.");
+    }
+  }, [id]);
 
-  if (!revue) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-sans">
-        <p className="text-gray-500">Revue introuvable 😕</p>
-      </div>
-    );
-  }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          journal_id: journal?.id
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        sessionStorage.setItem("userToken", data.token);
+        router.push(`/dashboard/${journal?.id}`);
+      } else {
+        setError(data.message || "Identifiants incorrects");
+      }
+    } catch (err) {
+      console.error("Erreur de connexion :", err);
+      setError("Erreur serveur");
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-wrap bg-white font-sans">
-      <div className="w-full md:w-1/2 flex flex-col">
-        <div className="flex items-center justify-between px-6 pt-6">
-          <a href="/" className="block w-32">
-            <img src="/logo.png" alt="Logo Publigate" className="w-full h-auto object-contain" />
-          </a>
-          <span className="font-semibold text-gray-800 text-2xl">{revue.nom}</span>
-        </div>
+    <div className="min-h-screen font-sans flex">
+      <Sidebar
+        journal={
+          journal
+            ? {
+                id: journal.id,
+                name: journal.name,
+                roles: [],
+                links: journal.links ?? []
+              }
+            : null
+        }
+        mode="public"
+      />
+      <div className="flex flex-col flex-1">
+        <Navbar journal={journal} />
+        <main className="flex-1 flex flex-col items-center justify-start px-8 sm:px-20 py-10">
+          {error && <p className="text-red-600 mb-4">{error}</p>}
 
-        <div className="flex flex-col justify-center my-auto px-8 md:px-24 lg:px-32 w-full pt-10">
-          <p className="text-center text-2xl mb-6 text-gray-700 font-semibold">
-            {modeInscription ? "Créez votre compte" : "Connectez-vous à votre compte"}
-          </p>
+          {journal && (
+            <div className="text-center max-w-xl w-full">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                {journal.name}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {journal.description}
+              </p>
 
-          <form className="flex flex-col space-y-4" onSubmit={(e) => e.preventDefault()}>
-            <div>
-              <label htmlFor="email" className="text-sm text-gray-600">Email</label>
-              <input type="email" id="email" className="border rounded w-full py-2 px-3 mt-1" />
-            </div>
+              <JournalLinks links={journal.links ?? []} />
 
-            <div>
-              <label htmlFor="password" className="text-sm text-gray-600">Mot de passe</label>
-              <div className="relative">
+              <form
+                onSubmit={handleLogin}
+                className="mt-6 flex flex-col gap-4 w-full max-w-md mx-auto"
+              >
                 <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  className="border rounded w-full py-2 px-3 mt-1 pr-16"
+                  type="email"
+                  placeholder="Adresse e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border px-4 py-2 rounded"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1 text-sm text-blue-600 hover:underline"
-                >
-                  {showPassword ? "Cacher" : "Voir"}
-                </button>
-              </div>
-            </div>
 
-            {modeInscription && (
-              <div>
-                <label htmlFor="confirm-password" className="text-sm text-gray-600">Confirmer le mot de passe</label>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? "text" : "password"}
-                    id="confirm-password"
-                    className="border rounded w-full py-2 px-3 mt-1 pr-16"
-                  />
+                <input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border px-4 py-2 rounded"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="bg-[#7c0b2b] text-white px-6 py-3 rounded hover:bg-[#450920] transition"
+                >
+                  Se connecter
+                </button>
+
+                <p className="text-sm text-center text-gray-600">
+                  Pas encore de compte ?{" "}
                   <button
                     type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-2 top-1 text-sm text-blue-600 hover:underline"
+                    onClick={() => router.push(`/register/${journal.id}`)}
+                    className="text-[#7c0b2b] hover:underline"
                   >
-                    {showConfirm ? "Cacher" : "Voir"}
+                    Créer un compte
                   </button>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="bg-[#7c0b2b] text-white py-2 mt-4 rounded hover:bg-[#530a1f] transition font-semibold"
-            >
-              {modeInscription ? "Créer le compte" : "Se connecter"}
-            </button>
-          </form>
-
-          <p className="text-sm text-center text-gray-600 mt-4">
-            {modeInscription ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
-            <button
-              onClick={() => setModeInscription(!modeInscription)}
-              className="text-blue-600 hover:underline font-medium"
-            >
-              {modeInscription ? "Se connecter" : "Créer un compte"}
-            </button>
-          </p>
-        </div>
-      </div>
-
-      <div className="hidden md:block w-full md:w-1/2">
-        <img
-          src="/unite_behind_the_science.jpg"
-          alt="Illustration"
-          className="object-cover w-full h-screen"
-        />
+                </p>
+              </form>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

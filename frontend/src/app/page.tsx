@@ -1,126 +1,169 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import { JournalLinks } from "./components/JournalLinks";
 
-const ROLES_PAR_DEFAUT = [
-  "auteur", "rédacteur en chef", "relecteur", "editeur", "admin_revue"
-] as const;
+type LinkItem = { name: string; url: string };
 
-type RoleStandard = (typeof ROLES_PAR_DEFAUT)[number];
-type Role = RoleStandard | string;
-
-type Revue = {
+type Journal = {
   id: string;
-  nom: string;
-  roles: Role[];
-  image?: string;
+  name: string;
   description?: string;
-  link?: { name: string; url: string }[];
+  website_url?: string;
+  image?: string;
   logo?: string;
+  links?: LinkItem[];
+};
+
+const visualsByJournal: Record<string, { image: string; logo: string }> = {
+  "1": {
+    image: "/SSS.webp",
+    logo: "/SSS.svg",
+  },
+  "2": {
+    image: "/socio.webp",
+    logo: "/socio.svg",
+  },
 };
 
 export default function Home() {
   const router = useRouter();
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const revues: Revue[] = [
-    {
-      id: "revue-SSS",
-      nom: "Sciences Sociales et Santé",
-      roles: ["auteur", "editeur"],
-      image: "/SSS.webp",
-      description:
-        "Sciences Sociales et Santé est une revue trimestrielle qui établit un dialogue interdisciplinaire à partir de données originales.",
-      logo: "/SSS.svg",
-      link: [
-        {
-          name: "Espace auteur",
-          url: "https://www.jle.com/fr/revues/sss/espace_auteur"
-        },
-        {
-          name: "Comité de rédaction",
-          url: "https://www.jle.com/fr/revues/sss/comite"
-        },
-        {
-          name: "Contact",
-          url: "/revues/revue-SSS/contact"
-        }
-      ]
-    },
-    {
-      id: "revue-socio",
-      nom: "Revue de Sociologie",
-      roles: ["relecteur"],
-      image: "/socio.webp",
-      description:
-        "La Revue de Sociologie publie des travaux contemporains sur les dynamiques sociales en France et à l'international.",
-      logo: "/socio.svg",
-      link: [
-        {
-          name: "Espace auteur",
-          url: "https://www.jle.com/fr/revues/socio/espace_auteur"
-        },
-        {
-          name: "Comité de rédaction",
-          url: "/revues/revue-socio/articles"
-        },
-        {
-          name: "Contact",
-          url: "/revues/revue-socio/contact"
-        }
-      ]
+  useEffect(() => {
+    const fetchJournals = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/journals/names/");
+        const data = await res.json();
+
+        const enriched = data.map((journal: any) => {
+          const id = journal.id.toString();
+          const visual = visualsByJournal[id] || {};
+          return {
+            id,
+            name: journal.name,
+            image: visual.image,
+            logo: visual.logo,
+          };
+        });
+
+        setJournals(enriched);
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors du chargement des journaux :", err);
+        setError("Impossible de charger les journaux.");
+        setLoading(false);
+      }
+    };
+
+    fetchJournals();
+  }, []);
+
+  const handleSelect = async (id: string) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/journals/${id}/`);
+      const data = await res.json();
+
+      const visual = visualsByJournal[id] || {};
+      const enrichedJournal: Journal = {
+        id: data.id.toString(),
+        name: data.name,
+        description: data.description,
+        website_url: data.website_url,
+        image: visual.image,
+        logo: visual.logo,
+        links: data.website_url
+          ? [{ name: "Site officiel", url: data.website_url }]
+          : [],
+      };
+
+      setSelectedJournal(enrichedJournal);
+    } catch (err) {
+      console.error("Erreur lors du chargement du journal :", err);
+      setError("Impossible de charger les détails du journal.");
     }
-  ];
-
-  const [selectedRevue, setSelectedRevue] = useState<Revue | null>(revues[0]);
+  };
 
   return (
     <div className="min-h-screen font-sans flex">
-      <Sidebar revue={selectedRevue} mode="public" />
+      <Sidebar
+        journal={
+          selectedJournal
+            ? {
+                id: selectedJournal.id,
+                name: selectedJournal.name,
+                roles: [],
+                links: selectedJournal.links ?? [],
+              }
+            : null
+        }
+        mode="public"
+      />
       <div className="flex flex-col flex-1">
-        <Navbar revue={selectedRevue} />
-        <main className="flex-1 flex items-center justify-center px-8 sm:px-20 py-10">
-          <div className="max-w-xl w-full">
-            <h1 className="text-3xl text-center font-bold text-gray-800 pb-11">
-              Bienvenue sur Publigate
-            </h1>
+        <Navbar journal={selectedJournal} />
+        <main className="flex-1 flex flex-col items-center justify-start px-8 sm:px-20 py-10">
+          <h1 className="text-3xl font-bold text-gray-800 pb-6 text-center">
+            Bienvenue sur Publigate
+          </h1>
 
-            <div className="flex flex-col items-center gap-4 pb-11">
-              <label className="text-sm text-gray-600">Choisissez une revue :</label>
-              <select
-                className="border px-4 py-2 rounded"
-                value={selectedRevue?.id ?? ""}
-                onChange={(e) =>
-                  setSelectedRevue(revues.find(r => r.id === e.target.value) ?? null)
-                }
-              >
-                {revues.map((revue) => (
-                  <option key={revue.id} value={revue.id}>
-                    {revue.nom}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <p className="mb-6 max-w-xl text-center">
+            L’accès à la soumission d’article nécessite un compte Publigate. Si
+            vous n’en avez pas encore, vous pourrez le créer après avoir cliqué
+            sur “Entrer dans l’espace du journal”.
+          </p>
 
-            {selectedRevue && (
-              <div className="text-center mt-2">
-                <p className="text-gray-700 mb-4">
-                  Vous êtes connecté·e à la revue :{" "}
-                  <strong>{selectedRevue.nom}</strong>.
-                </p>
-                <p className="text-sm text-gray-600">{selectedRevue.description}</p>
-
-                <button
-                  onClick={() => router.push(`/login/${selectedRevue.id}`)}
-                  className="bg-[#7c0b2b] mt-6 inline-block px-6 py-3 text-white rounded hover:bg-[#450920] transition"
-                >
-                  Entrer dans l’espace de la revue
-                </button>
-              </div>
-            )}
+          <div className="w-full max-w-2xl mb-10">
+            <label className="block text-lg font-medium text-gray-700 mb-2">
+              Choisissez un journal :
+            </label>
+            <select
+              className="w-full h-12 text-lg border border-gray-300 rounded px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#7c0b2b]"
+              onChange={(e) => handleSelect(e.target.value)}
+              value={selectedJournal?.id ?? ""}
+              disabled={loading || error !== null}
+            >
+              <option value="">— Sélectionnez —</option>
+              {loading && <option disabled>Chargement...</option>}
+              {error && <option disabled>{error}</option>}
+              {journals.map((journal) => (
+                <option key={journal.id} value={journal.id}>
+                  {journal.name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {selectedJournal && (
+            <div className="text-center mt-2 transition-all duration-300 ease-in-out max-w-xl">
+              <p className="text-gray-700 mb-2">
+                <strong>{selectedJournal.name}</strong>
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                {selectedJournal.description}
+              </p>
+
+              {/* <JournalLinks links={selectedJournal.links ?? []} /> */}
+
+              <button
+                onClick={() => {
+                  sessionStorage.setItem(
+                    "selectedJournal",
+                    JSON.stringify(selectedJournal)
+                  );
+                  router.push(`/login/${selectedJournal.id}`);
+                }}
+                className="bg-[#7c0b2b] mt-6 inline-block px-6 py-3 text-white rounded hover:bg-[#450920] transition"
+              >
+                Entrer dans l’espace du journal
+              </button>
+            </div>
+          )}
         </main>
       </div>
     </div>
