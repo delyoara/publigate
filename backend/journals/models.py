@@ -17,7 +17,6 @@ class Journal(models.Model):
         return self.name
 
 
-
 class JournalCommitteeMember(models.Model):
     journal = models.ForeignKey(Journal, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
