@@ -2,7 +2,7 @@ from django.db import models
 from users.models import User
 
 class Journal(models.Model):
-    name = models.TextField()
+    name = models.CharField(max_length=255, unique=True)
     acronym = models.TextField(blank=True, null=True)
     issn = models.TextField(blank=True, null=True)
     language = models.TextField(blank=True, null=True)

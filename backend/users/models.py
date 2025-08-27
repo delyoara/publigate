@@ -4,6 +4,11 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+import typing
+if typing.TYPE_CHECKING:
+    from journals.models import JournalCommitteeMember
+
+
 
 class User(AbstractUser):
     USERNAME_FIELD = 'email'
@@ -15,7 +20,7 @@ class User(AbstractUser):
     avatar_url = models.URLField(blank=True, null=True)
     reset_token = models.TextField(blank=True, null=True)
     reset_token_expiration = models.DateTimeField(blank=True, null=True)
-    journal = models.ForeignKey('journals.Journal', on_delete=models.SET_NULL, null=True, blank=True)
+    research_themes = models.TextField(blank=True, null=True)
     affiliation = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -46,6 +51,13 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    @property
+    def journal_roles_display(self):
+        return [
+            f"{member.journal.name} : {member.role}"
+            for member in JournalCommitteeMember.objects.filter(user=self)
+        ]
 
 class Role(models.Model):
     name = models.CharField(max_length=100, unique=True)
