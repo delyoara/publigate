@@ -43,8 +43,9 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/login/", {
-        method: "POST",
+      const res = await fetch("http://localhost:8000/api/login/", {
+        method: 'POST',
+        credentials: 'include', 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
@@ -52,9 +53,8 @@ export default function LoginPage() {
           journal_id: journal?.id
         })
       });
-
       const data = await res.json();
-
+      console.log(data);
       if (res.ok) {
         sessionStorage.setItem("userToken", data.token);
         router.push(`/dashboard/${journal?.id}`);
@@ -136,6 +136,17 @@ export default function LoginPage() {
                   >
                     Créer un compte
                   </button>
+{/* 
+                  <p className="text-sm text-center text-gray-600">
+                  Mot de passe perdu ?{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/register/${journal.id}`)}
+                    className="text-[#7c0b2b] hover:underline"
+                  >
+                    Reinitialiser le mot de passe
+                  </button> */}
+
                 </p>
               </form>
             </div>
