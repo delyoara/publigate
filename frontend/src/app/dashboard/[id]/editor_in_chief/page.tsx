@@ -1,0 +1,85 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import RoleNavbar from "@/features/users/components/RoleNavbar";
+
+type Article = {
+  id: number;
+  title: string;
+  author: string;
+  status: string;
+};
+
+export default function EditorInChiefPage() {
+  const { journalId } = useParams();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/editor/articles?journal_id=${journalId}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setArticles(data);
+      } catch (error) {
+        console.error("Erreur chargement articles :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, [journalId]);
+
+  const groupByStatus = (status: string) =>
+    articles.filter((article) => article.status === status);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <RoleNavbar role="editor_in_chief" journal={journalId as string} />
+
+      <main className="p-8">
+        <h1 className="text-3xl font-bold text-blue-700 mb-6">
+          Tableau de bord — Rédacteur en chef
+        </h1>
+
+        {loading ? (
+          <p>Chargement des articles...</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Section title="Articles reçus" items={groupByStatus("reçu")} />
+            <Section title="En lecture..." items={groupByStatus("lecture")} />
+            <Section title="En correction" items={groupByStatus("correction")} />
+            <Section title="Acceptés" items={groupByStatus("accepté")} />
+            <Section title="En production" items={groupByStatus("production")} />
+            <Section title="Publiés" items={groupByStatus("publié")} />
+            <Section title="En attente" items={groupByStatus("attente")} />
+            <Section title="Refusés" items={groupByStatus("refusé")} />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function Section({ title, items }: { title: string; items: Article[] }) {
+  return (
+    <div className="bg-white rounded shadow p-4">
+      <h2 className="text-lg font-semibold mb-2">{title}</h2>
+      {items.length === 0 ? (
+        <p className="text-sm text-gray-500">Aucun article.</p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((article) => (
+            <li key={article.id} className="border-b pb-2">
+              <strong>{article.title}</strong> — {article.author}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

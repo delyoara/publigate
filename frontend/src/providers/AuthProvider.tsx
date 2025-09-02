@@ -1,8 +1,21 @@
 "use client";
+
 import { createContext, useContext, useState, useEffect } from "react";
 
+type Journal = {
+  id: string;
+  name: string;
+};
+
+type User = {
+  email: string;
+  role: string;
+  roles?: string[];
+  journals?: Journal[];
+};
+
 type AuthContextType = {
-  user: { email: string; role: string } | null;
+  user: User | null;
   token: string | null;
   login: (email: string, password: string, journalId: string) => Promise<boolean>;
   logout: () => void;
@@ -11,14 +24,35 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  // Chargement initial du token + utilisateur
   useEffect(() => {
-    const stored = sessionStorage.getItem("userToken");
-    if (stored) setToken(stored);
-    // Tu peux aussi charger l'utilisateur ici si tu as un endpoint /me
+    const storedToken = sessionStorage.getItem("userToken");
+    if (storedToken) {
+      setToken(storedToken);
+      fetchUser(storedToken);
+    }
   }, []);
+
+  const fetchUser = async (token: string) => {
+    try {
+      const res = await fetch("http://localhost:8000/api/me/", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      }
+    } catch (error) {
+      console.error("Erreur chargement utilisateur :", error);
+    }
+  };
 
   const login = async (email: string, password: string, journalId: string) => {
     try {
@@ -32,11 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         sessionStorage.setItem("userToken", data.token);
         setToken(data.token);
-        setUser(data.user); // si ton backend renvoie l'utilisateur
+        setUser(data.user); // ou fetchUser(data.token) si tu préfères
         return true;
       }
       return false;
-    } catch {
+    } catch (error) {
+      console.error("Erreur login :", error);
       return false;
     }
   };
