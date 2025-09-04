@@ -23,11 +23,12 @@ type SelectedJournal = {
 type SidebarProps = {
   journal: SelectedJournal | null;
   mode?: "public" | "private";
+  className?: string;
 };
 
 export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
   return (
-    <nav className="bg-gradient-to-t from-[#450920] via-[#540b0e] to-[#8f2d56] h-screen w-48 text-white p-4 flex flex-col justify-between">
+    <nav className="bg-gradient-to-t from-[#450920] via-[#540b0e] to-[#8f2d56] w-48 text-white p-4 flex flex-col justify-between sticky top-0 h-screen overflow-y-auto">
       {/* Publigate logo */}
       <div>
         <a href="/" className="block mb-6">
@@ -38,7 +39,6 @@ export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
           />
         </a>
 
-        {/* Platform view (no journal selected) */}
         {!journal ? (
           <div className="text-sm text-center opacity-80">
             <p className="mb-2">Bienvenue sur Publigate</p>
@@ -46,10 +46,8 @@ export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
           </div>
         ) : (
           <>
-            {/* Journal name */}
             <div className="text-xl font-bold text-center py-6">{journal.name}</div>
 
-            {/* Public links */}
             {mode === "public" && journal.links?.length ? (
               <ul className="space-y-2">
                 {journal.links.map((item) => (
@@ -64,7 +62,6 @@ export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
                 ))}
               </ul>
             ) : (
-              // Private links based on roles
               <ul className="space-y-2">
                 {journal.roles.map((role) => {
                   switch (role) {
@@ -131,15 +128,14 @@ export default function Sidebar({ journal, mode = "private" }: SidebarProps) {
         )}
       </div>
 
-      {/* Footer */}
       <div className="text-xs text-center text-white opacity-60 px-2 pt-8 space-y-2">
         {!journal && (
           <>
             <a href="/support" className="hover:underline block">
-              ⚠️ Signaler un problème
+              Signaler un problème
             </a>
             <a href="/admin" className="hover:underline block">
-              🔐 Admin Publigate
+              Admin Publigate
             </a>
           </>
         )}

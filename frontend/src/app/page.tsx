@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "./components/Navbar";
-import Sidebar from "./components/Sidebar";
-import { JournalLinks } from "./components/JournalLinks";
+import Navbar from "../shared/components/Navbar";
+import Sidebar from "../shared/components/Sidebar";
+import { JournalLinks } from "../features/journals/components/JournalLinks";
 
 type LinkItem = { name: string; url: string };
 
@@ -104,6 +104,7 @@ export default function Home() {
             : null
         }
         mode="public"
+        className="sticky top-0 h-screen overflow-y-auto"
       />
       <div className="flex flex-col flex-1">
         <Navbar journal={selectedJournal} />

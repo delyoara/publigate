@@ -16,7 +16,6 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
-  token: string | null;
   login: (email: string, password: string, journalId: string) => Promise<boolean>;
   logout: () => void;
 };
@@ -25,25 +24,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
 
-  // Chargement initial du token + utilisateur
+  // Chargement initial du profil utilisateur via cookie
   useEffect(() => {
-    const storedToken = sessionStorage.getItem("userToken");
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUser(storedToken);
-    }
+    fetchUser();
   }, []);
 
-  const fetchUser = async (token: string) => {
+  const fetchUser = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/me/", {
         method: "GET",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include", // ← envoie les cookies HTTP-only
       });
       if (res.ok) {
         const data = await res.json();
@@ -58,15 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("http://localhost:8000/api/login/", {
         method: "POST",
-        credentials: "include",
+        credentials: "include", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, journal_id: journalId }),
       });
       const data = await res.json();
       if (res.ok) {
-        sessionStorage.setItem("userToken", data.token);
-        setToken(data.token);
-        setUser(data.user); // ou fetchUser(data.token) si tu préfères
+        setUser(data.user); 
         return true;
       }
       return false;
@@ -76,14 +65,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    sessionStorage.removeItem("userToken");
-    setToken(null);
+  const logout = async () => {
+  try {
+    await fetch("http://localhost:8000/api/logout/", {
+      method: "POST",
+      credentials: "include", 
+    });
+  } catch (error) {
+    console.error("Erreur lors du logout :", error);
+  } finally {
     setUser(null);
-  };
+  }
+};
+
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

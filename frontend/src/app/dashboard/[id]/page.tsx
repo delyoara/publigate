@@ -105,12 +105,12 @@ export default function Dashboard() {
       <div className="flex-1 p-8">
         <header className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">
+            {/* <h2 className="text-xl font-semibold text-gray-800">
               {currentJournal?.journal_name || "Revue inconnue"}
-            </h2>
-            <p className="text-sm text-gray-600">
+            </h2> */}
+            {/* <p className="text-sm text-gray-600">
               Rôle(s) : {roles.join(", ")}
-            </p>
+            </p> */}
           </div>
 
           <div className="flex items-center gap-4">
