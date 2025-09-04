@@ -1,5 +1,3 @@
-
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -7,8 +5,6 @@ from django.core.exceptions import ValidationError
 import typing
 if typing.TYPE_CHECKING:
     from journals.models import JournalCommitteeMember
-
-
 
 class User(AbstractUser):
     USERNAME_FIELD = 'email'
@@ -19,8 +15,10 @@ class User(AbstractUser):
     bio = models.TextField(blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)
     reset_token = models.TextField(blank=True, null=True)
+    discipline = models.CharField(max_length=200, blank=True, null=True)
     reset_token_expiration = models.DateTimeField(blank=True, null=True)
     research_themes = models.TextField(blank=True, null=True)
+    institution = models.CharField(max_length=255, blank=True, null=True)
     affiliation = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -85,7 +83,9 @@ class RolePermission(models.Model):
 class UserRole(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    journal = models.ForeignKey('journals.Journal', on_delete=models.CASCADE, null=True, blank=True)
+
 
     class Meta:
-        unique_together = ('user', 'role')
+        unique_together = ('user', 'role', 'journal')
 

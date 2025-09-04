@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from users.models import User, UserRole
+from users.models import User, UserRole, Role
 from journals.models import JournalCommitteeMember, Journal
 
 # Pour valider les données de connexion
@@ -43,12 +43,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
-        # Association à la revue
-        # try:
-        #     journal = Journal.objects.get(id=journal_id)
-        #     JournalCommitteeMember.objects.create(user=user, journal=journal, role="author")
-        # except Journal.DoesNotExist:
-        #     raise serializers.ValidationError("Journal introuvable")
+        # Récupération du journal
+        try:
+            journal = Journal.objects.get(id=journal_id)
+        except Journal.DoesNotExist:
+            raise serializers.ValidationError("Journal introuvable")
+
+        # Attribution du rôle "author"
+        try:
+            from users.models import Role
+            role = Role.objects.get(name="author")
+        except Role.DoesNotExist:
+            raise serializers.ValidationError("Le rôle 'author' n'existe pas.")
+
+        UserRole.objects.create(user=user, role=role, journal=journal)
 
         return user
 
@@ -72,15 +80,30 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_journals(self, user):
-        memberships = JournalCommitteeMember.objects.filter(user=user).exclude(role="author").select_related('journal')
-        return [
+        # Rôles de comité (hors author)
+        committee_roles = JournalCommitteeMember.objects.filter(user=user).exclude(role="author").select_related(
+            'journal')
+        committee_data = [
             {
                 'journal_id': m.journal.id,
                 'journal_name': m.journal.name,
                 'role': m.role
             }
-            for m in memberships
+            for m in committee_roles
         ]
+
+        # Rôles author via UserRole
+        author_roles = UserRole.objects.filter(user=user, role__name="author").select_related('journal', 'role')
+        author_data = [
+            {
+                'journal_id': r.journal.id,
+                'journal_name': r.journal.name,
+                'role': r.role.name
+            }
+            for r in author_roles
+        ]
+
+        return committee_data + author_data
 
     def get_roles(self, user):
         return [ur.role.name for ur in UserRole.objects.filter(user=user).select_related('role')]

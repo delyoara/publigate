@@ -45,7 +45,7 @@ def journal_names(request):
 def journal_detail(request, id):
     """
     GET /api/journals/<id>/
-    pour renvoier les détails d'une revue spécifique.
+    pour les détails d'une revue spécifique
     """
     if request.method == "GET":
         try:

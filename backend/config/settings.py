@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import sys
+#import sys
 import os
 from dotenv import load_dotenv
 from urllib.parse import urlparse, parse_qsl
@@ -26,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = False
@@ -44,9 +45,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary',
+    'cloudinary_storage',
     'journals',
     'users',
-   # 'articles',
+    'articles',
 ]
 
 MIDDLEWARE = [
@@ -98,6 +101,15 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = 'users.User'
+
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'CLOUDINARY_CLOUD_NAME',
+    'API_KEY': 'CLOUDINARY_API_KEY',
+    'API_SECRET': 'CLOUDINARY_API_SECRET',
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 REST_FRAMEWORK = {
     # 'DEFAULT_AUTHENTICATION_CLASSES': (

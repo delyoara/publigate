@@ -13,44 +13,11 @@ import secrets
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
-@api_view(['POST'])
-# @permission_classes([AllowAny])
-def login(request):
-    ...
-
 from journals.models import Journal, JournalCommitteeMember
-from users.models import User
+from users.models import User, UserRole
 from users.serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer
 
-# Générateur de token sécurisé
-def generate_secure_token():
-    return secrets.token_urlsafe(32)
 
-@csrf_exempt
-@api_view(['POST'])
-def register(request):
-    serializer = RegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-
-        # Lier l'utilisateur au journal
-        journal_id = request.data.get("journal_id")
-        if journal_id:
-            try:
-                from journals.models import Journal, JournalCommitteeMember
-                journal = Journal.objects.get(id=journal_id)
-                JournalCommitteeMember.objects.create(
-                    user=user,
-                    journal=journal,
-                    role="reader"  # ou "author", selon ton besoin
-                )
-            except Journal.DoesNotExist:
-                return Response({'error': 'Journal introuvable'}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'message': 'Compte créé'}, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -68,20 +35,20 @@ def login(request):
         if not check_password(password, user.password):
             return Response({'error': 'Mot de passe incorrect'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Association au journal si fourni
+        # Association au journal si ...
         if journal_id:
             try:
                 journal = Journal.objects.get(id=journal_id)
                 already_member = JournalCommitteeMember.objects.filter(user=user, journal=journal).exists()
                 if not already_member:
-                    JournalCommitteeMember.objects.create(user=user, journal=journal, role="reader")
+                    JournalCommitteeMember.objects.create(user=user, journal=journal, role="author")
             except Journal.DoesNotExist:
                 return Response({'error': 'Journal introuvable'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Génération des tokens
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+        refresh_token_value = str(refresh)
 
         #Sérialisation du profil
         profile = UserProfileSerializer(user)
@@ -105,7 +72,7 @@ def login(request):
         )
         response.set_cookie(
             key='refresh_token',
-            value=refresh_token,
+            value=refresh_token_value,
             httponly=True,
             secure=False,
             samesite='Lax',
@@ -118,8 +85,10 @@ def login(request):
 
     except User.DoesNotExist:
         return Response({'error': 'Utilisateur introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def logout(request):
     response = JsonResponse({'message': 'Déconnexion réussie'}, status=status.HTTP_200_OK)
     response.delete_cookie('access_token')
@@ -127,15 +96,75 @@ def logout(request):
     return response
 
 
+# Générateur de token sécurisé
+def generate_secure_token():
+    return secrets.token_urlsafe(32)
+
+@csrf_exempt
+@api_view(['POST'])
+def register(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+
+        journal_id = request.data.get("journal_id")
+        if journal_id:
+            try:
+                journal = Journal.objects.get(id=journal_id)
+
+                # Création du rôle "author" dans ce journal
+                from users.models import UserRole  # si ce n’est pas déjà importé
+                UserRole.objects.create(user=user, journal=journal, role="author")
+
+            except Journal.DoesNotExist:
+                return Response({'error': 'Journal introuvable'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Génération des tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token_value = str(refresh)
+        profile = UserProfileSerializer(user)
+        response = JsonResponse({
+            'message': 'Inscription réussie',
+            'access_token': access_token,
+            'user': profile.data
+        }, status=status.HTTP_201_CREATED)
+
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,
+            samesite='Lax',
+            domain='localhost',
+            max_age=300
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token_value,
+            httponly=True,
+            secure=False,
+            samesite='Lax',
+            domain='localhost',
+            max_age=86400
+        )
+
+        return response
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['POST'])
 def refresh_token(request):
-    refresh_token = request.COOKIES.get('refresh_token')
-    if not refresh_token:
+    refresh_token_value = request.COOKIES.get('refresh_token')
+    if not refresh_token_value:
         return Response({'error': 'Token de rafraîchissement manquant'}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
-        refresh = RefreshToken(refresh_token)
+        refresh = RefreshToken(refresh_token_value)
         access_token = str(refresh.access_token)
+        print("Refresh token reçu :", refresh_token_value)
+        print("Access token généré :", access_token)
 
         response = JsonResponse({'message': 'Token rafraîchi'}, status=status.HTTP_200_OK)
         response.set_cookie(
@@ -156,7 +185,9 @@ def refresh_token(request):
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    # print("🔍 Cookies reçus dans /api/me/:", request.COOKIES)
+    print("Cookies reçus dans /api/me/:", request.COOKIES)
+    print("Utilisateur connecté :", request.user)
+    print("Rôles :", UserRole.objects.filter(user=request.user).values())
     if request.method == 'GET':
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data)
