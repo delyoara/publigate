@@ -3,6 +3,8 @@ from django.db import models
 from django.db import models
 from users.models import User
 
+
+
 # --- Soumissions ---
 class Submission(models.Model):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -35,13 +37,14 @@ class Article(models.Model):
     date_reception = models.DateTimeField(auto_now_add=True)
     abstract_fr = models.TextField(blank=True, null=True)
     abstract_en = models.TextField(blank=True, null=True)
+    keywords = models.CharField(max_length=255, blank=True, null=True)
     content = models.TextField(blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='authored_articles')
     is_available_for_committee = models.BooleanField(default=False)
     handling_editor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='handled_articles')
     status = models.ForeignKey(ArticleStatus, on_delete=models.SET_NULL, null=True)
     version = models.IntegerField(default=1)
-    # issue = models.ForeignKey(Issue, on_delete=models.SET_NULL, null=True)
+    issue = models.ForeignKey('journals.Issue', on_delete=models.SET_NULL, null=True)
     exceptional_status = models.TextField(blank=True, null=True)
     exceptional_note = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -56,7 +59,9 @@ class ArticleVersion(models.Model):
     file_url = models.TextField()
     blind_file_url = models.TextField()
     submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    previous_version = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
+    resubmission_note = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

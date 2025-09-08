@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from journals import views
-from users.views import register, login, me, request_password_reset, reset_password, change_password, logout, refresh_token
+from users.views.auth_views import login, logout, register, refresh_token, request_password_reset, reset_password
+from users.views.profile_views import me, change_password
 
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
     path('api/change-password/', change_password, name='change-password'),
     path('api/logout/', logout, name='logout'),
     path('api/refresh-token/', refresh_token, name='refresh-token'),
+
 ]
