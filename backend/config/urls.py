@@ -3,6 +3,9 @@ from django.urls import path
 from journals import views
 from users.views.auth_views import login, logout, register, refresh_token, request_password_reset, reset_password
 from users.views.profile_views import me, change_password
+from users.views.roles.editor_in_chief import editor_in_chief_dashboard, editor_in_chief_decision
+
+
 
 
 urlpatterns = [
@@ -21,5 +24,14 @@ urlpatterns = [
     path('api/change-password/', change_password, name='change-password'),
     path('api/logout/', logout, name='logout'),
     path('api/refresh-token/', refresh_token, name='refresh-token'),
+
+    # rôles
+    path("api/journals/<int:journal_id>/editor_in_chief/", editor_in_chief_dashboard, name='editor_in_chief_dashboard'),
+    # path("api/journals/<int:journal_id>/author/", author_dashboard, name='author_dashboard'),
+    # path("api/journals/<int:journal_id>/reviewer/", views.reviewer_dashboard),
+    # path("api/journals/<int:journal_id>/associate_editor/", views.associate_editor_dashboard),
+    # path("api/journals/<int:journal_id>/reader/", views.reader_dashboard),
+    # path("api/journals/<int:journal_id>/journal_editor/", views.journal_editor_dashboard),
+    # path("api/journals/<int:journal_id>/handling_editor/", views.handling_editor_dashboard),
 
 ]

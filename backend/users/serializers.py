@@ -80,25 +80,38 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_journals(self, user):
+        def normalize_role(value):
+            return value.strip().lower().replace(" ", "-") if value else None
+
         # Rôles de comité (hors author)
-        committee_roles = JournalCommitteeMember.objects.filter(user=user).exclude(role="author").select_related(
-            'journal')
+        committee_roles = (
+            JournalCommitteeMember.objects
+            .filter(user=user)
+            .exclude(role__iexact="author")  # insensible à la casse
+            .select_related('journal')
+        )
         committee_data = [
             {
                 'journal_id': m.journal.id,
                 'journal_name': m.journal.name,
-                'role': m.role
+                'role': normalize_role(m.role),
+                'source': 'committee'
             }
             for m in committee_roles
         ]
 
         # Rôles author via UserRole
-        author_roles = UserRole.objects.filter(user=user, role__name="author").select_related('journal', 'role')
+        author_roles = (
+            UserRole.objects
+            .filter(user=user, role__name__iexact="author")
+            .select_related('journal', 'role')
+        )
         author_data = [
             {
                 'journal_id': r.journal.id,
                 'journal_name': r.journal.name,
-                'role': r.role.name
+                'role': normalize_role(r.role.name),
+                'source': 'user.role'
             }
             for r in author_roles
         ]

@@ -4,7 +4,6 @@ from django.db import models
 from users.models import User
 
 
-
 # --- Soumissions ---
 class Submission(models.Model):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

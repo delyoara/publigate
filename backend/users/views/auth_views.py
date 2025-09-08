@@ -58,9 +58,10 @@ def login(request):
             key='access_token',
             value=access_token,
             httponly=True,
+            #mettre en True en prod
             secure=False,
             samesite='Lax',
-            domain='localhost',
+
             max_age=300
         )
         response.set_cookie(
@@ -69,7 +70,6 @@ def login(request):
             httponly=True,
             secure=False,
             samesite='Lax',
-            domain='localhost',
             max_age=86400
         )
 
@@ -123,7 +123,6 @@ def register(request):
             httponly=True,
             secure=False,
             samesite='Lax',
-            domain='localhost',
             max_age=300
         )
         response.set_cookie(
@@ -132,7 +131,6 @@ def register(request):
             httponly=True,
             secure=False,
             samesite='Lax',
-            domain='localhost',
             max_age=86400
         )
 
