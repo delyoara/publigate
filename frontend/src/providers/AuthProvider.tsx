@@ -1,47 +1,60 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 
-type Journal = {
-  id: string;
-  name: string;
+type JournalRole = {
+  journal_id: number;
+  journal_name: string;
+  role: string;
+  hasUrgentTask?: boolean;
 };
 
-type User = {
+type UserProfile = {
+  id: number;
   email: string;
-  role: string;
+  first_name: string;
+  username: string;
+  journals?: JournalRole[];
   roles?: string[];
-  journals?: Journal[];
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: UserProfile | null;
+  loading: boolean;
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string, journalId: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  // Chargement initial du profil utilisateur via cookie
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  const fetchUser = async () => {
+  const refreshUser = async () => {
     try {
+      await fetch("http://localhost:8000/api/refresh-token/", {
+        method: "POST",
+        credentials: "include",
+      });
+
       const res = await fetch("http://localhost:8000/api/me/", {
         method: "GET",
-        credentials: "include", // ← envoie les cookies HTTP-only
+        credentials: "include",
       });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data);
-      }
+
+      if (!res.ok) throw new Error("Échec du chargement du profil");
+
+      const data: UserProfile = await res.json();
+      setUser(data);
     } catch (error) {
-      console.error("Erreur chargement utilisateur :", error);
+      console.error("Erreur profil :", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,16 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("http://localhost:8000/api/login/", {
         method: "POST",
-        credentials: "include", 
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, journal_id: journalId }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.user); 
-        return true;
-      }
-      return false;
+
+      if (!res.ok) return false;
+
+      await refreshUser();
+      return true;
     } catch (error) {
       console.error("Erreur login :", error);
       return false;
@@ -66,21 +78,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-  try {
-    await fetch("http://localhost:8000/api/logout/", {
-      method: "POST",
-      credentials: "include", 
-    });
-  } catch (error) {
-    console.error("Erreur lors du logout :", error);
-  } finally {
-    setUser(null);
-  }
-};
+    try {
+      await fetch("http://localhost:8000/api/logout/", {
+        method: "POST",
+        credentials: "include",
+      });
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Erreur déconnexion :", error);
+    }
+  };
 
+  useEffect(() => {
+    refreshUser();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -88,6 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) {
+    throw new Error("useAuth doit être utilisé dans un AuthProvider");
+  }
   return context;
 }

@@ -1,20 +1,23 @@
-# 🌐 FICHIERS SYSTÈME ET GÉNÉRAUX
+#  FICHIERS SYSTÈME ET GÉNÉRAUX
 .DS_Store
 *.log
 *.pyc
 *.pyo
 *.pyd
-__pycache__/
 *.swp
 *.bak
 *.tmp
+*.cover
+__pycache__/
+.pytest_cache/
+.cache/
 
-# ⚙️ OUTILS DE DÉVELOPPEMENT & CONFIG
+#  OUTILS DE DÉVELOPPEMENT & CONFIG
 .vscode/
 .idea/
 *.code-workspace
 
-# 🐍 BACKEND (Django / Python)
+#  BACKEND (Django / Python)
 backend/env/
 backend/.env
 backend/.env.*
@@ -26,16 +29,17 @@ backend/media/
 backend/*.log
 backend/.pytest_cache/
 backend/coverage/
-.pytest_cache/
+backend/**/migrations/
 
 env/
-
+cookies.txt
+*.cookies
 
 # Pip / Poetry / Pipenv
 Pipfile.lock
 poetry.lock
 
-# 📦 FRONTEND (Next.js / React / Node.js)
+# FRONTEND (Next.js / React / Node.js)
 frontend/node_modules/
 frontend/.next/
 frontend/.turbo/
@@ -50,11 +54,10 @@ frontend/pnpm-lock.yaml
 frontend/out/
 frontend/dist/
 frontend/.cache/
-frontend/node_modules/
 dist/
 build/
 
-# 🧪 TESTS & COVERAGE
+#  TESTS & COVERAGE
 .coverage
 coverage.*
 htmlcov/
@@ -63,17 +66,19 @@ test-output/
 jest.config.js
 frontend/coverage/
 
-# 🐳 DOCKER (si utilisé un jour)
+# DOCKER 
 *.pid
 *.pid.lock
 .dockerignore
 docker-compose.override.yml
 .env.docker
 
-# 🔍 LINTER / FORMATTER (optionnel)
+# LINTER / FORMATTER (optionnel)
 .mypy_cache/
 .prettierignore
 .eslintcache
 
+# FICHIERS DIVERS
 notes.md
+**/notes.md
 tables.sql

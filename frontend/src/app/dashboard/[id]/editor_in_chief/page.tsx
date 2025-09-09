@@ -12,17 +12,31 @@ type Article = {
 };
 
 export default function EditorInChiefPage() {
-  const { journalId } = useParams();
+
+  const params = useParams() as { id?: string };
+  console.log("Params:", params);
+  const journalId = params.id;
+  console.log(journalId)
+
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!journalId) return;
+
     const fetchArticles = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/editor/articles?journal_id=${journalId}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://localhost:8000/api/journals/${journalId}/editor_in_chief/`,
+          { credentials: "include" }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Erreur HTTP ${res.status}`);
+        }
+
         const data = await res.json();
+        console.log(data);
         setArticles(data);
       } catch (error) {
         console.error("Erreur chargement articles :", error);
@@ -37,12 +51,16 @@ export default function EditorInChiefPage() {
   const groupByStatus = (status: string) =>
     articles.filter((article) => article.status === status);
 
+  if (!journalId) {
+    return <p className="p-8 text-red-800">Journal introuvable dans l’URL.</p>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <RoleNavbar role="editor_in_chief" journal={journalId as string} />
+      <RoleNavbar role="editor-in-chief" journal={journalId} />
 
       <main className="p-8">
-        <h1 className="text-3xl font-bold text-blue-700 mb-6">
+        <h1 className="text-3xl font-bold text-sky-800 mb-6">
           Tableau de bord — Rédacteur en chef
         </h1>
 
@@ -70,7 +88,7 @@ function Section({ title, items }: { title: string; items: Article[] }) {
     <div className="bg-white rounded shadow p-4">
       <h2 className="text-lg font-semibold mb-2">{title}</h2>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun article.</p>
+        <p className="text-sm text-slate-500">Aucun article.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((article) => (

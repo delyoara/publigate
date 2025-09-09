@@ -38,7 +38,6 @@ const defaultProfile: UserProfile = {
 };
 
 
-
 export default function ProfilePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<UserProfile>(defaultProfile);
