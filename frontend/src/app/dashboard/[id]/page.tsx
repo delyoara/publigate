@@ -24,7 +24,7 @@ export default function Dashboard() {
   // Redirection si pas d'accès à ce journal
   useEffect(() => {
     if (!loading && user?.journals) {
-      const journal = user.journals.find(j => j.journal_id === journalId);
+      const journal = user.journals.find((j) => j.journal_id === journalId);
       if (!journal) {
         router.push("/unauthorized");
       }
@@ -32,29 +32,40 @@ export default function Dashboard() {
   }, [loading, user, journalId, router]);
 
   const goToProfile = () => router.push("/profile");
-  const goToRole = (role: string) => router.push(`/dashboard/${journalId}/${role}`);
+  const goToRole = (role: string) =>
+    router.push(`/dashboard/${journalId}/${role}`);
 
   if (loading) return <p className="p-8">Chargement du profil...</p>;
   if (!user) return null;
 
-  const currentJournal = user.journals?.find(j => j.journal_id === journalId);
-  const roles = user.journals
-    ?.filter(j => j.journal_id === journalId)
-    .map(j => j.role) || [];
+  const currentJournal = user.journals?.find((j) => j.journal_id === journalId);
+  const roles =
+    user.journals
+      ?.filter((j) => j.journal_id === journalId)
+      .map((j) => j.role) || [];
 
   return (
     <div className="flex min-h-screen font-sans">
-      <SidebarJournalList journals={user.journals || []} currentJournalId={journalId} />
+      <SidebarJournalList
+        journals={user.journals || []}
+        currentJournalId={journalId}
+      />
 
       <div className="flex-1 p-8">
         <header className="flex justify-between items-center mb-6">
           <div></div>
           <div className="flex items-center gap-4">
             <p className="font-bold text-blue-700">{user.first_name}</p>
-            <button onClick={goToProfile} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 transition">
+            <button
+              onClick={goToProfile}
+                          className="flex items-center gap-1 text-ml text-gray-800 transition-transform hover:scale-105"
+            >
               Mon profil
             </button>
-            <button onClick={logout} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-800 transition">
+            <button
+              onClick={logout}
+                          className="flex items-center gap-1 text-ml text-gray-800 transition-transform hover:scale-105"
+            >
               Déconnexion
             </button>
           </div>

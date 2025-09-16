@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AuthorSubmissionPage() {
   const [title, setTitle] = useState("");
@@ -12,6 +12,42 @@ export default function AuthorSubmissionPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [userInfo, setUserInfo] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    affiliation: "",
+    discipline: "",
+  });
+
+  // Récupération du profil utilisateur
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/me/", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Erreur lors du chargement du profil");
+        const data = await res.json();
+        
+
+        setUserInfo({
+          first_name: data.first_name || "",
+          last_name: data.last_name || "",
+          email: data.email || "",
+          affiliation: data.affiliation || "",
+          discipline: data.discipline || "",
+        });
+      } catch (err) {
+        console.error(err);
+        setError("Impossible de charger le profil utilisateur.");
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +63,13 @@ export default function AuthorSubmissionPage() {
       formData.append("keywords", keywords);
       if (articleFile) formData.append("article_pdf", articleFile);
       if (letterFile) formData.append("letter_pdf", letterFile);
+
+      // Ajouter les infos du profil dans la soumission
+      formData.append("first_name", userInfo.first_name);
+      formData.append("last_name", userInfo.last_name);
+      formData.append("email", userInfo.email);
+      formData.append("affiliation", userInfo.affiliation);
+      formData.append("discipline", userInfo.discipline);
 
       const res = await fetch("http://localhost:8000/api/submissions/", {
         method: "POST",
@@ -53,18 +96,23 @@ export default function AuthorSubmissionPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold mb-6">Soumettre un article</h1>
+    <div className="max-w-3xl mx-auto p-8 bg-white shadow rounded space-y-6">
+      <h1 className="text-2xl font-bold">Soumettre un article</h1>
+
+      {/* Section profil utilisateur */}
+      <div className="bg-gray-100 p-4 rounded border">
+        <h2 className="text-lg font-semibold mb-2">Mes informations</h2>
+        <p><strong>Nom :</strong> {userInfo.first_name} {userInfo.last_name}</p>
+        <p><strong>Email :</strong> {userInfo.email}</p>
+        <p><strong>Affiliation :</strong> {userInfo.affiliation}</p>
+        <p><strong>Discipline :</strong> {userInfo.discipline}</p>
+      </div>
 
       {success && (
-        <p className="mb-4 text-green-600">
-          Article soumis avec succès !
-        </p>
+        <p className="text-green-600"> Article soumis avec succès !</p>
       )}
       {error && (
-        <p className="mb-4 text-red-600">
-          {error}
-        </p>
+        <p className="text-red-600">{error}</p>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,9 +171,7 @@ export default function AuthorSubmissionPage() {
         </div>
 
         <div>
-          <label className="block font-medium">
-            Lettre de non-soumission (PDF)
-          </label>
+          <label className="block font-medium">Lettre de non-soumission (PDF)</label>
           <input
             type="file"
             accept="application/pdf"

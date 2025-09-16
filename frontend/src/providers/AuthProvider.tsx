@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 type JournalRole = {
   journal_id: number;
@@ -33,30 +33,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Routes publiques — à adapter selon ton app
+  const publicRoutes = ["/login", "/register"];
+  const isPublicRoute =
+    pathname === "/" || publicRoutes.some((route) => pathname.startsWith(route));
 
   const refreshUser = async () => {
-    try {
-      await fetch("http://localhost:8000/api/refresh-token/", {
-        method: "POST",
-        credentials: "include",
-      });
+  try {
+    const refreshRes = await fetch("http://localhost:8000/api/refresh-token/", {
+      method: "POST",
+      credentials: "include",
+    });
 
-      const res = await fetch("http://localhost:8000/api/me/", {
-        method: "GET",
-        credentials: "include",
-      });
+    if (!refreshRes.ok) throw new Error("Échec du refresh token");
 
-      if (!res.ok) throw new Error("Échec du chargement du profil");
+    const res = await fetch("http://localhost:8000/api/me/", {
+      method: "GET",
+      credentials: "include",
+    });
 
-      const data: UserProfile = await res.json();
-      setUser(data);
-    } catch (error) {
-      console.error("Erreur profil :", error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (!res.ok) throw new Error("Échec du chargement du profil");
+
+    const data: UserProfile = await res.json();
+    setUser(data);
+  } catch (error) {
+    console.error("Erreur profil :", error);
+    setUser(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const login = async (email: string, password: string, journalId: string) => {
     try {
@@ -68,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) return false;
-
-      await refreshUser();
+// Charge le profil après login
+      await refreshUser(); 
       return true;
     } catch (error) {
       console.error("Erreur login :", error);
@@ -83,16 +92,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: "POST",
         credentials: "include",
       });
-      setUser(null);
-      router.push("/login");
     } catch (error) {
       console.error("Erreur déconnexion :", error);
+    } finally {
+      setUser(null);
+      router.push("/");
     }
   };
 
   useEffect(() => {
-    refreshUser();
-  }, []);
+    if (!isPublicRoute) {
+      refreshUser(); // Charge le profil uniquement sur les pages privées
+    } else {
+      setUser(null); // Nettoie le profil si on quitte l’espace connecté
+      setLoading(false);
+    }
+  }, [pathname]);
 
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser, login, logout }}>

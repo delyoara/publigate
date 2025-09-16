@@ -125,7 +125,7 @@ export default function ProfilePage() {
       method: "POST",
       credentials: "include",
     });
-    router.push("http://localhost:3000");
+    router.push("/");
   } catch (error) {
     console.error("Erreur déconnexion :", error);
     alert("Échec de la déconnexion.");

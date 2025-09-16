@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../shared/components/Navbar";
 import Sidebar from "../shared/components/Sidebar";
 import { JournalLinks } from "../features/journals/components/JournalLinks";
+import { visualsByJournal } from "@/shared/data/visualsByjournal";
 
 type LinkItem = { name: string; url: string };
 
@@ -18,16 +19,7 @@ type Journal = {
   links?: LinkItem[];
 };
 
-const visualsByJournal: Record<string, { image: string; logo: string }> = {
-  "1": {
-    image: "/SSS.webp",
-    logo: "/SSS.svg",
-  },
-  "2": {
-    image: "/socio.webp",
-    logo: "/socio.svg",
-  },
-};
+visualsByJournal
 
 export default function Home() {
   const router = useRouter();

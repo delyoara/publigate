@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import UserForm, { FormData } from "@/features/auth/components/UserForm";
+import UserForm, { UserProfileData } from "@/features/auth/components/UserForm";
 import Sidebar from "@/shared/components/Sidebar";
 import { FetchRegister } from "../../../features/auth/services/FetchRegister";
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
     }
   }, [journalId]);
 
-  async function handleFormSubmit(data: FormData) {
+  async function handleFormSubmit(data: UserProfileData) {
     if (data.password !== data.confirmPassword) {
       setError("Les mots de passe ne correspondent pas.");
       return;

@@ -8,10 +8,10 @@ export const roleAssets: Record<string, {
     icon: "/icons/editor.svg",
     bg: "bg-blue-50"
   },
-  "auteur": {
+  "author": {
     label: "Auteur",
     icon: "/icons/writer.svg",
-    bg: "bg-yellow-50"
+    bg: "bg-sky-50"
   },
   "reviewer": {
     label: "Relecteur",
