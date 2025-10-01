@@ -2,7 +2,7 @@ from django.db import models
 
 from django.db import models
 from users.models import User
-
+from cloudinary.models import CloudinaryField
 
 # --- Soumissions ---
 class Submission(models.Model):
@@ -48,6 +48,8 @@ class Article(models.Model):
     exceptional_note = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    file_pdf = CloudinaryField('file_pdf', blank=True, null=True)
+    blind_file_pdf = CloudinaryField('blind_file_pdf', blank=True, null=True)
 
 
 
@@ -55,8 +57,9 @@ class Article(models.Model):
 class ArticleVersion(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     version_number = models.IntegerField()
-    file_url = models.TextField()
-    blind_file_url = models.TextField()
+    file_url = CloudinaryField('file_pdf', blank=True, null=True)
+    blind_file_url = CloudinaryField('blind_file_url', blank=True, null=True)
+
     submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     previous_version = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
@@ -152,7 +155,6 @@ class VersionComment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-
 # --- Documents liés à un article ---
 class ArticleDocument(models.Model):
     article = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True)
@@ -164,7 +166,7 @@ class ArticleDocument(models.Model):
         ('publication_certificate', 'Publication Certificate'),
         ('other', 'Other')
     ])
-    file_url = models.TextField()
+    file_url = CloudinaryField('file_url', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
